@@ -6,6 +6,7 @@ export default function Home() {
       <div>test pull 3</div>
       <div>test pull 4</div>
       <div>test pull 5</div>
+      <div>test pull 6</div>
     </div>
   );
 }
