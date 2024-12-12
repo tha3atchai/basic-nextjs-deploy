@@ -5,11 +5,13 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { useGLTFModel } from "@/hooks/useGlTFModel";
 import { useControls } from "leva";
+import * as THREE from "three";
 
 const Model = ({ src }: { src: string }) => {
   const scene = useGLTFModel(src);
 
-  console.log(scene.children);
+  console.log("children", scene.children);
+  console.log("type", typeof scene.children);
 
   const materialProps = useControls({
     thickness: { value: 0.2, min: 0, max: 3, step: 0.05 },
@@ -31,15 +33,20 @@ const Model = ({ src }: { src: string }) => {
       >
         hello world!
       </Text>
-      {scene.children.map((child, index) => (
-        <mesh
-          key={index}
-          geometry={(child as any).geometry}
-          rotation={[Math.PI / 2, 0, 0]}
-        >
-          <MeshTransmissionMaterial {...materialProps} />
-        </mesh>
-      ))}
+      {scene.children.map((child, index) => {
+        if (child instanceof THREE.Mesh) {
+          return (
+            <mesh
+              key={index}
+              geometry={child.geometry}
+              rotation={[Math.PI / 2, 0, 0]}
+            >
+              <MeshTransmissionMaterial {...materialProps} />
+            </mesh>
+          );
+        }
+        return null;
+      })}
     </group>
   );
 };
