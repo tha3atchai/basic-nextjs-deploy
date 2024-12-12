@@ -1,37 +1,61 @@
 "use client";
 import React, { Suspense, useEffect, useState } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, useGLTF } from "@react-three/drei";
+import { Environment, MeshTransmissionMaterial, Text } from "@react-three/drei";
+import { Canvas } from "@react-three/fiber";
+import { OrbitControls } from "@react-three/drei";
+import { useGLTFModel } from "@/hooks/useGlTFModel";
+import { useControls } from "leva";
 import * as THREE from "three";
 
-const Model = () => {
-  const { scene, animations } = useGLTF("/models/Dance.glb");
+const Model = ({ src }: { src: string }) => {
+  const scene = useGLTFModel(src);
 
-  const mixer = new THREE.AnimationMixer(scene);
+  console.log("children", scene.children);
+  console.log("type", typeof scene.children);
 
-  animations.forEach(clip => mixer.clipAction(clip).play());
-
-  useEffect(() => {
-    scene.traverse(child => {
-      if (child instanceof THREE.Mesh) {
-        const material = child.material;
-        if (material && material.map) {
-          material.needsUpdate = true;
-        } else {
-          console.log("No texture found for this material");
-        }
-      }
-    });
-  }, [scene]);
-
-  useFrame((state, delta) => {
-    mixer.update(delta);
+  const materialProps = useControls({
+    thickness: { value: 0.2, min: 0, max: 3, step: 0.05 },
+    roughness: { value: 0, min: 0, max: 1, step: 0.1 },
+    transmission: { value: 1, min: 0, max: 1, step: 0.1 },
+    ior: { value: 1.2, min: 0, max: 3, step: 0.1 },
+    chromaticAberration: { value: 0.02, min: 0, max: 1 },
+    backside: { value: true },
   });
-
-  return <primitive object={scene} scale={[2, 2, 2]} />;
+  return (
+    <group scale={[1, 1, 1]}>
+      <Text
+        font={"/fonts/PPNeueMontreal-Bold.otf"}
+        position={[0, 0, -1]}
+        fontSize={0.5}
+        color="white"
+        anchorX="center"
+        anchorY="middle"
+      >
+        hello world!
+      </Text>
+      {scene.children.map((child, index) => {
+        if (child instanceof THREE.Mesh) {
+          return (
+            <mesh
+              key={index}
+              geometry={child.geometry}
+              rotation={[Math.PI / 2, 0, 0]}
+            >
+              <MeshTransmissionMaterial {...materialProps} />
+            </mesh>
+          );
+        }
+        return null;
+      })}
+    </group>
+  );
 };
 
-const ModelViewer = () => {
+interface ModelViewerProps {
+  src: string;
+}
+
+const ModelViewer = ({ src }: ModelViewerProps) => {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -41,11 +65,12 @@ const ModelViewer = () => {
   if (!isClient) return null;
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <Canvas style={{ width: "100%", height: "100vh" }}>
+      <Canvas style={{ width: 300, height: 500 }}>
         <ambientLight intensity={0.5} />
-        <directionalLight position={[10, 10, 5]} intensity={1} />
+        <directionalLight intensity={2} position={[0, 2, 3]} />
         <OrbitControls />
-        <Model />
+        <Environment preset="city" />
+        <Model src={src} />
       </Canvas>
     </Suspense>
   );
