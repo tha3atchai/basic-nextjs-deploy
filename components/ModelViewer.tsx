@@ -7,7 +7,7 @@ import { useGLTFModel } from "@/hooks/useGlTFModel";
 import { useControls } from "leva";
 import * as THREE from "three";
 
-const Model = ({ src }: { src: string }) => {
+const Model = ({ src, refY }: { src: string }) => {
   const scene = useGLTFModel(src);
 
   console.log("children", scene.children);
@@ -22,7 +22,7 @@ const Model = ({ src }: { src: string }) => {
     backside: { value: true },
   });
   return (
-    <group scale={[1, 1, 1]}>
+    <group scale={refY < 300 ? [5, 5, 5] : [2, 2, 2]}>
       <Text
         font={"/fonts/PPNeueMontreal-Bold.otf"}
         position={[0, 0, -1]}
@@ -53,9 +53,10 @@ const Model = ({ src }: { src: string }) => {
 
 interface ModelViewerProps {
   src: string;
+  refY?: number | undefined;
 }
 
-const ModelViewer = ({ src }: ModelViewerProps) => {
+const ModelViewer = ({ src, refY }: ModelViewerProps) => {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -65,12 +66,12 @@ const ModelViewer = ({ src }: ModelViewerProps) => {
   if (!isClient) return null;
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <Canvas style={{ width: 300, height: 500 }}>
+      <Canvas style={{ width: "100%", height: "100%" }}>
         <ambientLight intensity={0.5} />
         <directionalLight intensity={2} position={[0, 2, 3]} />
         <OrbitControls />
         <Environment preset="city" />
-        <Model src={src} />
+        <Model src={src} refY={refY} />
       </Canvas>
     </Suspense>
   );
